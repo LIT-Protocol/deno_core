@@ -153,6 +153,13 @@ pub fn to_v8_error<'a>(
         let e = tc_scope.exception().unwrap();
         let js_error = JsError::from_v8_exception(tc_scope, e);
         msg = format!("{}: {}", msg, js_error.exception_message);
+
+        // XXX: Prevent panic "Custom error class must have a builder registered: Uncaught null"
+        // from taking down the whole process. Return the underlying error message instead.
+        if js_error.exception_message == "Uncaught null" {
+          println!("to_v8_error: {msg}");
+          return message.into();
+        }
       }
       panic!("{}", msg);
     }
